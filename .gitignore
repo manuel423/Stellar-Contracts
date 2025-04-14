@@ -1,0 +1,5 @@
+/cwt_contract/target
+/cwt_contract/Cargo.lock
+/mdt_contract/target
+/mdt_contract/Cargo.lock
+/test
