@@ -1,4 +1,6 @@
-use soroban_sdk::{contract, contractimpl, Address, Env, symbol_short, Vec, vec, TryFromVal, IntoVal};
+#![no_std]
+
+use soroban_sdk::{contract, contractimpl, Address, Env, symbol_short, Vec, vec, IntoVal};
 
 #[contract]
 pub struct MDTContract;
@@ -17,20 +19,27 @@ impl MDTContract {
         assert!(!holders.is_empty(), "Holders list cannot be empty");
 
         let cwt_address: Address = env.storage().persistent().get(&symbol_short!("CWT")).unwrap();
-        let cwt_total: i128 = i128::try_from_val(&env, &env.invoke_contract::<i128>(
+        
+        // Get total CWT supply directly
+        let cwt_total: i128 = env.invoke_contract::<i128>(
             &cwt_address,
             &symbol_short!("tot_sup"),
             vec![&env],
-        )).unwrap_or(0);
+        );
+        
         assert!(cwt_total > 0, "CWT total supply must be greater than zero");
 
         let mut total_distributed: i128 = 0;
-        for holder in holders.iter() {
-            let cwt_balance: i128 = i128::try_from_val(&env, &env.invoke_contract::<i128>(
+        for i in 0..holders.len() {
+            let holder = holders.get(i).unwrap();
+            
+            // Get CWT balance directly
+            let cwt_balance: i128 = env.invoke_contract::<i128>(
                 &cwt_address,
                 &symbol_short!("bal_of"),
                 vec![&env, holder.into_val(&env)],
-            )).unwrap_or(0);
+            );
+            
             if cwt_balance > 0 {
                 let mdt_amount = (cwt_balance * amount) / cwt_total;
                 if mdt_amount > 0 {
